@@ -65,7 +65,7 @@
     "chromatic": "^13.0.1",
     "concurrently": "^9.1.2",
     "cross-env": "^7.0.3",
-    "daisyui": "5.0.22",
+    "daisyui": "5.0.48",
     "dotenv": "^16.5.0",
     "eslint": "^9.24.0",
     "eslint-config-next": "^15.3.0",
