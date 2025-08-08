@@ -119,7 +119,7 @@ jobs:
         run: |
           echo "New Version Number is: ${{ needs.create-release.outputs.newVersion }}"
       - name: Login to Azure
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           # The referenced secret AZURE_CREDENTIALS contains
           # JSON with client id, client secret, tenant id and
