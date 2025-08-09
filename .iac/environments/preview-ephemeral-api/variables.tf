@@ -90,13 +90,24 @@ variable "app_container_max_replicas" {
 }
 
 variable "github_organisation_or_account" {
-  description = "Name of the GitHub repository's organisation or personal account. This will be used to construct the name of the orgnaisation ot account's Container registry - as `ghcr.io/<org or account name>` - from which container image for API would be pulled for the Preview environment (in this enviornment, in order to economise, the ACA app will not pull from an ACR instance as that costs whereas GitHub Pacakges is free)."
+  description = "Name of the GitHub organisation or personal account that will be used to log in to the Docker registry assocaited with the organisation or personal account."
+  type        = string
+}
 
-  type = string
+variable "github_token_for_registry_read" {
+  description = "GitHub token with read access to the Docker registry assocaited with the GitHub organisation or personal account specified in github_organisation_or_account variable. The image specified by image_repository and image_tag arguments will be pulled from this registry."
+  type        = string
+  sensitive   = true
+}
+
+variable "vault_secretname_registry_password_or_token" {
+  description = "Name of the key vault secret that into which the password or token specified by github_token_for_registry_read argument would be stored and from which it would be read by the ACA app for logging in to the GitHub registry."
+  type        = string
+  default     = null
 }
 
 variable "image_repository" {
-  description = "Name of the Docker image to deploy (excluding the '<registry name>.azurecr.io/' prefix and the ':<tag>' suffix)"
+  description = "Name of the Docker image to deploy (excluding the '<registry name>.azurecr.io/' or 'ghcr.io' prefix and the ':<tag>' suffix)"
   type        = string
 }
 
@@ -164,4 +175,9 @@ variable "env_OTEL_EXPORTER_OTLP_HEADERS" {
   description = "Authorization header that would be provided when writing telemetry to the observability backend using OpenTelemetry protocol. Grafana Cloud would show this if you press Details button on your Stack, then generate a new token; base-64 encoded value of this token would be included in the generated Authorization header that would be shown. This variable would be set as an environment variable on the created Vercel app and marked as SENSITIVE."
   type        = string
   sensitive   = true
+}
+
+variable "vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS" {
+  description = "The name of the key vault secret into which the value of the env_OTEL_EXPORTER_OTLP_HEADERS variable would be stored."
+  type        = string
 }

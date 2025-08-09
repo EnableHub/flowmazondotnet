@@ -37,6 +37,11 @@ variable "env_OTEL_EXPORTER_OTLP_HEADERS" {
   sensitive   = true
 }
 
+variable "vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS" {
+  description = "The name of the key vault secret into which the value of the env_OTEL_EXPORTER_OTLP_HEADERS variable would be stored."
+  type        = string
+}
+
 variable "env_OTEL_RESOURCE_ATTRIBUTES" {
   description = "Used to pass value of environment variable OTEL_RESOURCE_ATTRIBUTES that the API expects. See README of flowmazonbackend for details."
   type        = string
@@ -93,14 +98,33 @@ variable "acr_resource_group_name" {
   default     = null
 }
 
-variable "image_server" {
-  description = "Image server for the Docker image to deploy. This is the part of the image name before the last slash e.g. in mcr.microsoft.com/k8se/quickstart:latest the image server is mcr.microsoft.com/k8se. This argument and the pair of arguments `acr_name` and `acr_resource_group_name` are mutually exclusive. EITHER provide a non-null value for this argument, OR for the other two, BUT NOT BOTH."
+variable "registry_login_server" {
+  description = "Login server of the Docker registry into which the ACA app will login to pull the image whose full name is given by this argument together with image_repository and image_tag (the full name would be <registry_login_server>.<image_repository>:<image_tag>). Thus this argument is also a prefix of the full image name before the first slash e.g. in mcr.microsoft.com/k8se/quickstart:latest the image server is mcr.microsoft.com. This argument and the pair of arguments `acr_name` and `acr_resource_group_name` are mutually exclusive. EITHER provide a non-null value for this argument, OR for both of the other two, BUT NOT BOTH SETS OF ARGUMENTS. This argument would only be used if `acr_name` is null."
   type        = string
   default     = null
 }
 
+variable "registry_username" {
+  description = "Username for the Docker registry to deploy to. If this argument is null then managed identity specified by managed_identity_name would be used to login to the registry."
+  type        = string
+  default     = null
+}
+
+variable "vault_secretname_registry_password_or_token" {
+  description = "Name of the key vault secret that would contain the password or token for the Docker registry to deploy to. This would be used together with registry_username to log in to the registry if registry_username is not null."
+  type        = string
+  default     = null
+}
+
+variable "registry_password_or_token" {
+  description = "The password or token for the Docker registry to deploy to. This would be stored in key vault secret name in argument vault_secretname_registry_password_or_token and used together with registry_username by ACA app to log in to the registry if registry_username is not null."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
 variable "image_repository" {
-  description = "Name of the Docker image to deploy, excluding the image server prefix the ':<tag>' suffix. For example in mcr.microsoft.com/k8se/quickstart:latest the image repository is quickstart"
+  description = "Name of the Docker image to deploy, excluding the prefix which is registry_login_server (or, if acr_name is not null then the login server of the ACR instance whose name is provided in acr_name argument), and the ':<image_tag>' suffix. For example in mcr.microsoft.com/k8se/quickstart:latest the image repository is k8se/quickstart"
   type        = string
 }
 
@@ -119,8 +143,10 @@ variable "app_revision_mode" {
 }
 
 variable "managed_identity_name" {
-  description = "Name of the user-assigned managed identity that would be assigned to the ACA app. This would be used to read secret value from Azure Key Vault and, if acr_name parameter is specified, to pull image from the specified Azure Container Regitry"
-  type        = string
+  description = "Name of the user-assigned managed identity that would be assigned to the ACA app. This would be used to read secret values from Azure Key Vault. Moreover, if acr_name parameter is not null then the managed identity named by this argument - if this argument is not null - would be used to pull image from the specified Azure Container Regitry."
+
+  type = string
+
 }
 
 variable "managed_identity_resource_group_name" {

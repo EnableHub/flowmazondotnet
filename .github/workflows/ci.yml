@@ -2,7 +2,7 @@ name: CI
 # This concurrency block definition ensures that
 # only a single instance of this workflow can be
 # be running at any given time for a given
-# source (i.e. head) branch
+# source (i.e. head) branch.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -37,6 +37,8 @@ jobs:
       api_app_name: ${{ steps.compute-non-secret-vars.outputs.api_app_name }}
       api_app_environment_name: ${{ steps.compute-non-secret-vars.outputs.api_app_environment_name }}
       api_app_domain_name: ${{ steps.compute-non-secret-vars.outputs.api_app_domain_name }}
+      vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS: ${{ steps.compute-non-secret-vars.outputs.vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS }}
+      vault_secretname_registry_password_or_token: ${{ steps.compute-non-secret-vars.outputs.vault_secretname_registry_password_or_token }}
     steps:
       - name: Compute non-secret variables for this and later jobs
         id: compute-non-secret-vars
@@ -118,6 +120,10 @@ jobs:
           echo "api_app_environment_name=${{ vars.API_APP_ENVIRONMENT_NAME_PREFIX }}${{ env.PR_LABEL }}" >> $GITHUB_OUTPUT
 
           echo "api_app_domain_name=api-${{ env.PR_LABEL }}.${{ vars.VERCEL_APP_APEX_DOMAIN_NAME }}" >> $GITHUB_OUTPUT
+
+          echo "vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS=${{ vars.VAULT_SECRETNAME_ENV_OTEL_EXPORTER_OTLP_HEADERS_PREFIX }}${{ env.PR_LABEL }}" >> $GITHUB_OUTPUT
+
+          echo "vault_secretname_registry_password_or_token=${{ vars.VAULT_SECRETNAME_REGISTRY_PASSWORD_OR_TOKEN_PREFIX }}${{ env.PR_LABEL }}" >> $GITHUB_OUTPUT
 
   audit-signatures:
     name: Audit signatures of NPM dependencies
@@ -493,26 +499,13 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }} # Auto-generated, no setup needed!
-      - name: Compute Full Image Name
-        id: compute-full-image-name
-        run: |
-          REPO_LOWER=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')
-          echo "REPO_LOWER=${REPO_LOWER}" >> $GITHUB_OUTPUT
-          echo "FULL_IMAGE_NAME=ghcr.io/${REPO_LOWER}/${{ vars.IMAGE_REPOSITORY }}:${{ needs.compute-non-secret-vars.outputs.new_version }}" >> $GITHUB_OUTPUT
 
       - name: Build and Push Docker image
         run: |
           cd ./flowmazonbackend
-          docker build -t ${{ steps.compute-full-image-name.outputs.FULL_IMAGE_NAME }} .
-          docker push ${{ steps.compute-full-image-name.outputs.FULL_IMAGE_NAME }}
-
-      - name: Make package public
-        run: |
-          curl -X PATCH \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/user/packages/container/${{ steps.compute-full-image-name.outputs.FULL_IMAGE_NAME }}/visibility" \
-            -d '{"visibility":"public"}'
+          FULL_IMAGE_NAME=ghcr.io/${{ vars.IMAGE_REPOSITORY }}:${{ needs.compute-non-secret-vars.outputs.new_version }}
+          docker build -t ${FULL_IMAGE_NAME} .
+          docker push ${FULL_IMAGE_NAME}
 
       # Like preview-ephemeral workspace created/synced above,
       # preview-ephemeral-api HCP workspace would be created
@@ -622,7 +615,9 @@ jobs:
           -var="app_domain_name=${{ needs.compute-non-secret-vars.outputs.api_app_domain_name }}" \
           -var="app_container_name=${{ vars.API_CONTAINER_NAME }}" \
           -var="app_container_port=${{ vars.API_CONTAINER_PORT }}" \
-          -var="github_organisation_or_account=${{ steps.compute-full-image-name.outputs.REPO_LOWER }}" \
+          -var="github_organisation_or_account=${{ github.actor }}" \
+          -var="github_token_for_registry_read=${{ secrets.API_APP_GH_TOKEN }}" \
+          -var="vault_secretname_registry_password_or_token=${{ needs.compute-non-secret-vars.outputs.vault_secretname_registry_password_or_token }}" \
           -var="image_repository=${{ vars.IMAGE_REPOSITORY }}" \
           -var="image_tag=${{ needs.compute-non-secret-vars.outputs.new_version }}" \
           -var="managed_identity_name=${{ vars.MANAGED_IDENTITY_NAME }}" \
@@ -633,16 +628,7 @@ jobs:
           -var="env_OTEL_RESOURCE_ATTRIBUTES=deployment.environment.name=${{ needs.compute-non-secret-vars.outputs.otel_env }}" \
           -var="env_OTEL_EXPORTER_OTLP_ENDPOINT=${{ vars.ENV_OTEL_EXPORTER_OTLP_ENDPOINT }}" \
           -var="env_OTEL_EXPORTER_OTLP_PROTOCOL=${{ vars.ENV_OTEL_EXPORTER_OTLP_PROTOCOL }}" \
-          -var="env_OTEL_EXPORTER_OTLP_HEADERS=${{ secrets.ENV_OTEL_EXPORTER_OTLP_HEADERS }}"
+          -var="env_OTEL_EXPORTER_OTLP_HEADERS=${{ secrets.ENV_OTEL_EXPORTER_OTLP_HEADERS }}" \
+          -var="vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS=${{ needs.compute-non-secret-vars.outputs.vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS }}"
 
         working-directory: .iac/environments/preview-ephemeral-api
-
-        # for this particular Pull Request (except ACAP app for API,
-# which will be created at the same time as deployment due to
-# limitations of ACA app's Terraform resource; see
-# aca_app module's README)
-#
-# As the workspace will run on HCP Terraform's runner, I
-# wouldn't bother with a job to run terraform apply on
-# the workspace preview-ephemeral that is seprate from the
-# code to run db migrations (AT LEAST NOT FOR NOW)

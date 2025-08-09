@@ -37,7 +37,7 @@ data "azurerm_key_vault_secret" "connstr_for_api" {
 }
 
 locals {
-  login_server    = var.acr_name != null ? data.azurerm_container_registry.app[0].login_server : var.image_server
+  login_server    = var.acr_name != null ? data.azurerm_container_registry.app[0].login_server : var.registry_login_server
   full_image_name = "${local.login_server}/${var.image_repository}:${var.image_tag}"
 }
 
@@ -56,14 +56,19 @@ resource "azurerm_container_app_environment" "app" {
 # Create key vault secret for env_OTLP_EXPORTER_OTLP_HEADERS.
 # Doing so means the value of the variables wouldn't be visible
 # in Azure.
-locals {
-  vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS = "otlp-headers"
-}
 resource "azurerm_key_vault_secret" "otlp_headers" {
-  name         = local.vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS
+  name         = var.vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS
   key_vault_id = data.azurerm_key_vault.vault.id
   value        = var.env_OTEL_EXPORTER_OTLP_HEADERS
 }
+
+resource "azurerm_key_vault_secret" "registry_password_or_token" {
+  name         = var.vault_secretname_registry_password_or_token
+  key_vault_id = data.azurerm_key_vault.vault.id
+  value        = var.registry_password_or_token
+}
+
+
 
 resource "azurerm_container_app" "app" {
   name                         = var.app_name
@@ -114,21 +119,31 @@ resource "azurerm_container_app" "app" {
     # try to deleted it. So we're ok.
   }
 
-  dynamic "registry" {
+  registry {
 
-    for_each = var.acr_name != null ? [1] : []
-    content {
-      server   = data.azurerm_container_registry.app[0].login_server
-      identity = data.azurerm_user_assigned_identity.managed_identity.id
-    }
+    server               = var.acr_name != null ? data.azurerm_container_registry.app[0].login_server : var.registry_login_server
+    identity             = var.registry_username == null ? data.azurerm_user_assigned_identity.managed_identity.id : null
+    username             = var.registry_username
+    password_secret_name = var.registry_username == null ? null : var.vault_secretname_registry_password_or_token
+
 
   }
 
   secret {
+    name     = var.vault_secretname_registry_password_or_token
+    identity = data.azurerm_user_assigned_identity.managed_identity.id
+    # key_vault_secret_id is mandatory together with name above
+    key_vault_secret_id = azurerm_key_vault_secret.registry_password_or_token.id
+  }
+
+  # like the vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS
+  # secret below, this would loaded into an env 
+  # block (corresponding to an environment variable
+  # passed to ACA app at run time) in this resource.
+  secret {
     name     = var.vault_secretname_connectionstring_for_api
     identity = data.azurerm_user_assigned_identity.managed_identity.id
-    # key_vault_secret_id is mandatory together with name above (even # though this seems redundant) when using a user-assigned managed 
-    # identity to access the key vault as we are doing here.
+    # key_vault_secret_id is mandatory together with name above
     key_vault_secret_id = data.azurerm_key_vault_secret.connstr_for_api.id
   }
 
@@ -138,10 +153,9 @@ resource "azurerm_container_app" "app" {
   # We would later set this referenced secret as value
   # of an environmentr variable on the app.
   secret {
-    name     = local.vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS
+    name     = var.vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS
     identity = data.azurerm_user_assigned_identity.managed_identity.id
-    # key_vault_secret_id is mandatory together with name above (even # though this seems redundant) when using a user-assigned managed 
-    # identity to access the key vault as we are doing here.
+    # key_vault_secret_id is mandatory together with name above
     key_vault_secret_id = azurerm_key_vault_secret.otlp_headers.id
   }
 
@@ -218,7 +232,7 @@ resource "azurerm_container_app" "app" {
       }
       env {
         name        = "OTEL_EXPORTER_OTLP_HEADERS"
-        secret_name = local.vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS
+        secret_name = var.vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS
       }
 
       dynamic "liveness_probe" {
