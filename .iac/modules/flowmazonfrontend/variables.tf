@@ -5,9 +5,8 @@ variable "vercel_team_id" {
 }
 
 variable "vercel_project_name" {
-  description = "Name of the project that would be created."
+  description = "Name of the Vercel project that would be created."
   type        = string
-  sensitive   = true
 }
 
 variable "vercel_app_domain_name" {

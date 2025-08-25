@@ -292,7 +292,7 @@ jobs:
           # because it is not part of terraform block in the root module
           TF_WORKSPACE: ${{needs.compute-non-secret-vars.outputs.tf_workspace_name}}
         run: terraform init
-        working-directory: .iac/environments/preview-ephemeral
+        working-directory: .iac/workspaces/preview-ephemeral
       - name: Terraform Apply
         env:
           # terraform init expects to be given TF_WORKSPACE env var
@@ -357,7 +357,7 @@ jobs:
           -var="env_OTEL_EXPORTER_OTLP_PROTOCOL=${{ vars.ENV_OTEL_EXPORTER_OTLP_PROTOCOL }}" \
           -var="env_OTEL_EXPORTER_OTLP_HEADERS=${{ secrets.ENV_OTEL_EXPORTER_OTLP_HEADERS }}" \
           -var="secretname_for_vercel_project_id=${{ needs.compute-non-secret-vars.outputs.vercel_project_id_secret }}"
-        working-directory: .iac/environments/preview-ephemeral
+        working-directory: .iac/workspaces/preview-ephemeral
 
   migrate-db:
     environment:
@@ -514,7 +514,7 @@ jobs:
           # because it is not part of terraorm block in the root module
           TF_WORKSPACE: ${{ needs.compute-non-secret-vars.outputs.tf_api_workspace_name }}
         run: terraform init
-        working-directory: .iac/environments/preview-ephemeral-api
+        working-directory: .iac/workspaces/preview-ephemeral-api
 
       - name: Terraform Apply
         env:
@@ -560,7 +560,7 @@ jobs:
           -var="env_OTEL_EXPORTER_OTLP_PROTOCOL=${{ vars.ENV_OTEL_EXPORTER_OTLP_PROTOCOL }}" \
           -var="env_OTEL_EXPORTER_OTLP_HEADERS=${{ secrets.ENV_OTEL_EXPORTER_OTLP_HEADERS }}" \
           -var="vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS=${{ needs.compute-non-secret-vars.outputs.vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS }}"
-        working-directory: .iac/environments/preview-ephemeral-api
+        working-directory: .iac/workspaces/preview-ephemeral-api
 
   api-unittests:
     name: Run API .NET Unit Tests and publish report
@@ -703,7 +703,7 @@ jobs:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
       - name: Destroy API infrastructure (preview-ephemeral-api)
-        working-directory: .iac/environments/preview-ephemeral-api
+        working-directory: .iac/workspaces/preview-ephemeral-api
         env:
           TF_WORKSPACE: ${{ needs.compute-non-secret-vars.outputs.tf_api_workspace_name }}
         run: |
@@ -734,7 +734,7 @@ jobs:
             -var="env_OTEL_EXPORTER_OTLP_HEADERS=${{ secrets.ENV_OTEL_EXPORTER_OTLP_HEADERS }}" \
             -var="vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS=${{ needs.compute-non-secret-vars.outputs.vault_secretname_env_OTEL_EXPORTER_OTLP_HEADERS }}"
       - name: Destroy preview-ephemeral infrastructure
-        working-directory: .iac/environments/preview-ephemeral
+        working-directory: .iac/workspaces/preview-ephemeral
         env:
           TF_WORKSPACE: ${{ needs.compute-non-secret-vars.outputs.tf_workspace_name }}
         run: |

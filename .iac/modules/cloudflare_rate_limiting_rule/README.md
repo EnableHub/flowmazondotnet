@@ -10,7 +10,7 @@ This Terraform module does the following:
 
 ### Rate Limiting Rule
 
-- On paid plans, you can create multiple reate limiting rules and different rate limiting rules for different hostnames in the zone.
+- On paid plans, you can create multiple rate limiting rules and different rate limiting rules for different hostnames in the zone.
 
   However, on the free plan, you can have just **one Rate Limiting Rule per zone** and this may only be created at the zone level.
 
@@ -18,8 +18,10 @@ This Terraform module does the following:
   - the rule would apply to all CNAME and A records in the zone that are proxied through cloudflare.
   - On `terraform delete` the rule would be deleted. This may be problem if you have other DNS records on the zone that are proxied through Cloudflare for they would lose the protection of that rule also.
 
-- **A complication with the zone-level rate limiting rule tha this module creates, at least on the free plan, is that it may already exist** even if you can't see it in the Cloudflare Dashboard. This may be because you created it earlier in the CloudFlare UI and then deleted it. If so, it would likely not have been been deleted and continue to exist, most likely with the name of **"default"** even if you had given it another name.
+- **A complication with the zone-level rate limiting rule that this module creates, at least on the free plan, is that it may already exist** even if you can't see it in the Cloudflare Dashboard. This may be because you created it earlier in CloudFlare UI and then deleted it. If so, it would likely not have been been deleted and continues to exist, most likely with the name of **"default"** even if you had given it another name.
+
   **BEFORE USING THIS MODULE,** certainly if you are on the Free plan, **check if a zone level rate-limiting rule exists and delete it if it does, as follows** (deleting the rule in the UI would not work!). You can use the same `{api token}` that you have created to use this module:
+  
   1. Run the following cURL to see if there is an existing ruleset with `phase = "http_ratelimit"`:
 
   ```bash

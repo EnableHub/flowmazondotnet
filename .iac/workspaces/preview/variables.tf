@@ -34,7 +34,7 @@ variable "id_and_vault_resource_group_location" {
 # managed_identity_for_secret_resource_group_name
 
 variable "vault_secretname_for_connectionstring" {
-  description = "name of the secret whose value is the connection string to be used by the API to connect to the database"
+  description = "name of the secret whose value is the connection string to be used by the API to connect to the database. For this workspace it doesn't matter what this name is as this connection string will not be used by any of the ephemeral Preview environments - create via preview-ephemeral-XXX Terraform workspaces - that will share the database created by this workspace."
   type        = string
 }
 
@@ -135,7 +135,7 @@ variable "rate_limit_requests_per_period" {
 }
 
 variable "cloudflare_rate_limiting_rule_name" {
-  description = "Name of the rate limiting rule. This has several nuances, including why it is creaed at the Zone level rather than hostname level and why it defaults to value \"default\". See README for details."
+  description = "Name of the rate limiting rule. This has several nuances, including why it is created at the Zone level rather than hostname level and why it defaults to value \"default\". See README of module cloudflare_rate_limiting_rule for details."
   type        = string
   default     = "default"
 

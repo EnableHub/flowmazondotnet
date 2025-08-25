@@ -1,12 +1,13 @@
 ## Overview
 
-## Architecture
+## Deployment Diagram (Production)
 
-UML Component diagram with description???
+**Deployment Diagram for Production is given below**. 
 
-### API Gateway: CloudFlare API Shield
+Application code runs on application infrastructure nodes shown in **GREEN**. These may be seen as a rough Architecture Diagram of the solution.
 
-See my [dev.to post]() for a justification as to why I use this and not Azure API Management or other Azure products.
+![alt text](image.png)
+
 
 ## Setup (after Cloning the Repo)
 
