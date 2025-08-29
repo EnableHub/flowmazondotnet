@@ -134,7 +134,7 @@ jobs:
     runs-on: ubuntu-24.04
     if: github.event.action != 'closed'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Audit Provenance Attestations and Signatures
         run: |
           npm ci
@@ -148,7 +148,7 @@ jobs:
     needs: compute-non-secret-vars
     if: github.event.action != 'closed'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Create or update preview-ephemeral HCP workspace
         # We don't care if the worksapce already exists as
@@ -368,7 +368,7 @@ jobs:
     if: github.event.action != 'closed'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install psql client
         run: |
@@ -404,7 +404,7 @@ jobs:
       PR_LABEL: ${{ needs.compute-non-secret-vars.outputs.pr_label }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Print version to console
         run: |
           echo "Version number of the code artifacts produced for ths pull request-specific Preview environment would be: ${{ needs.compute-non-secret-vars.outputs.new_version }}"
@@ -575,7 +575,7 @@ jobs:
       name: Preview
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
@@ -634,7 +634,7 @@ jobs:
       BASE_URL: https://${{ needs.compute-non-secret-vars.outputs.vercel_app_domain }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - uses: actions/setup-node@v4
         with:
           node-version: 24.x
@@ -675,7 +675,7 @@ jobs:
       name: Preview
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
@@ -723,7 +723,7 @@ jobs:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
       VERCEL_PROJECT_ID: ${{ secrets[needs.compute-non-secret-vars.outputs.vercel_project_id_secret] }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Print version to console
         run: |
           echo "Version number for Preview deployment: ${{ needs.compute-non-secret-vars.outputs.new_version }}"
@@ -816,7 +816,7 @@ jobs:
       VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
       GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Terraform CLI
         uses: hashicorp/setup-terraform@v3
