@@ -456,7 +456,7 @@ jobs:
         run: |
           echo "Version number of the code artifacts produced for ths pull request-specific Preview environment would be: ${{ needs.compute-non-secret-vars.outputs.new_version }}"
       - name: Login to Azure
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           # The referenced secret AZURE_CREDENTIALS contains
           # JSON with client id, client secret, tenant id and
