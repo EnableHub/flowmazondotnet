@@ -652,7 +652,7 @@ jobs:
             --collect:"XPlat Code Coverage"
       - name: Publish test report to PR Checks
         if: always()
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         with:
           name: API Unit Tests
           path: flowmazonbackend/flowmazonapi.UnitTests/TestResults/**/test_results.xml
@@ -749,7 +749,7 @@ jobs:
 
       - name: Publish test report to PR Checks
         if: always()
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         with:
           name: Playwright Integration Tests
           path: ./flowmazonfrontend/junit-report/test_results.xml
@@ -789,7 +789,7 @@ jobs:
             --collect:"XPlat Code Coverage"
       - name: Publish test report to PR Checks
         if: always()
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         with:
           name: API Integration Tests
           path: flowmazonbackend/flowmazonapi.IntegrationTests/TestResults/**/test_results.xml
